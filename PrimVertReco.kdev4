@@ -1,0 +1,4 @@
+[Project]
+Name=PrimVertReco
+Manager=KDevCMakeManager
+VersionControl=kdevgit
