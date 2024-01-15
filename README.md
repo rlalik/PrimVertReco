@@ -1,7 +1,6 @@
 # What is pvr
 
-Primary Vertex Reconstruction (pvr) for HADES based on the procedure
-developped by Matthias Zipper:
+Primary Vertex Reconstruction (pvr) for HADES based on the procedure developed by Matthias Zipper:
 
 M. Zipper, Technische Universität München (2015)
 Measuring πΛ Correlations in π- + W Reactions at 1.7 GeV/c with HADES

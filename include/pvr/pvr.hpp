@@ -1,141 +1,111 @@
 #pragma once
 
-#include <vector>
-
-#include <TMath.h>
+// ROOT
+#include <Math/Point3D.h>
+#include <Math/Vector3D.h>
+#include <TLorentzVector.h>
 #include <TMatrixD.h>
 #include <TVector3.h>
-#include <hparticlecand.h>
+
+// system
+#include <utility>
+#include <vector>
+
+using ROOT::Math::XYZPoint;
+using ROOT::Math::XYZVector;
 
 namespace pvr
 {
 
-typedef std::pair<TVector3, TLorentzVector> hades_track;
+typedef std::pair<XYZPoint, XYZVector> spatial_track;
 
-class PrimVertReco
+class pvr
 {
-  public:
-    PrimVertReco();
-    PrimVertReco(size_t ntracks);
+public:
+    pvr(size_t ntracks = 10) : maxtracks(ntracks) {}
 
-    void insert_track(HParticleCand* track);
-    void insert_track(const hades_track& track);
-    void insert_track(const TVector3& base, const TLorentzVector& track);
+    auto insert_track(const spatial_track& track) -> void { tracks.push_back(track); }
 
-    virtual ~PrimVertReco();
+    template <typename BasePoint, typename DirectionVector>
+    auto insert_track(const BasePoint& base, const DirectionVector& track) -> void
+    {
+        tracks.emplace_back(base, track);
+    }
 
-    TVector3 calc() const;
-    void clear();
+    auto insert_track(const TVector3& base, const TLorentzVector& track) -> void
+    {
+        tracks.emplace_back(base, track.Vect());
+    }
 
-    std::vector<hades_track> get_tracks() const { return tracks; }
+    virtual ~pvr() = default;
 
-  protected:
-  private:
+    auto calculate() const -> XYZPoint
+    {
+        TMatrixD M[maxtracks];
+        TMatrixD b[maxtracks];
+
+        const auto n = tracks.size();
+
+        assert(n < maxtracks);
+
+        for (auto k = 0; k < n; k++)
+        {
+            const auto mag2 = tracks[k].second.mag2();
+            M[k].ResizeTo(3, 3);
+
+            const auto invpsq = 1. / mag2;
+            const auto Tx = tracks[k].second.x();
+            const auto Ty = tracks[k].second.y();
+            const auto Tz = tracks[k].second.z();
+
+            M[k][0][0] = 1. - Tx * Tx * invpsq;
+            M[k][0][1] = -Tx * Ty * invpsq;
+            M[k][0][2] = -Tx * Tz * invpsq;
+            M[k][1][0] = M[k][0][1];
+            M[k][1][1] = 1. - Ty * Ty * invpsq;
+            M[k][1][2] = -Ty * Tz * invpsq;
+            M[k][2][0] = M[k][0][2];
+            M[k][2][1] = M[k][1][2];
+            M[k][2][2] = 1. - Tz * Tz * invpsq;
+            b[k].ResizeTo(3, 1);
+            b[k][0][0] = tracks[k].first.X();
+            b[k][1][0] = tracks[k].first.Y();
+            b[k][2][0] = tracks[k].first.Z();
+        }
+
+        TMatrixD MM(3, 3);
+        TMatrixD bb(3, 1);
+        for (auto k = 0; k < n; k++)
+        {
+            MM += M[k];
+            bb += M[k] * b[k];
+        }
+
+        TMatrixD r(3, 1);
+        if (MM.Determinant() == 0)
+        {
+            r[0][0] = -50;
+            r[1][0] = -50;
+            r[2][0] = -1000;
+        }
+        else
+        {
+            MM = MM.Invert();
+            r = MM * bb;
+        }
+
+        return {r[0][0], r[1][0], r[2][0]};
+    }
+
+    void clear() { tracks.clear(); }
+
+    std::vector<spatial_track> get_tracks() const { return tracks; }
+
+protected:
+private:
     size_t maxtracks;
 
-    std::vector<hades_track> tracks;
+    std::vector<spatial_track> tracks;
 };
 
-PrimVertReco::PrimVertReco()
-    : maxtracks(64)
-{
-}
-
-PrimVertReco::PrimVertReco(size_t ntracks)
-    : maxtracks(ntracks)
-{
-}
-
-PrimVertReco::~PrimVertReco() {}
-
-void PrimVertReco::insert_track(const TVector3& base, const TLorentzVector& track)
-{
-    hades_track t(base, track);
-
-    tracks.push_back(t);
-}
-
-void PrimVertReco::insert_track(const hades_track& track)
-{
-    tracks.push_back(track);
-}
-
-void PrimVertReco::insert_track(HParticleCand* track)
-{
-    hades_track t;
-
-    double mom = track->getMomentum();
-    double theta = track->getTheta();
-    double phi = track->getPhi();
-    double r = track->getR();
-    double conv = TMath::DegToRad();
-
-    t.first.SetXYZ(r * TMath::Cos(conv * phi + TMath::PiOver2()), r * TMath::Sin(conv * phi + TMath::PiOver2()), track->getZ());
-
-    t.second.SetPxPyPzE(mom * TMath::Sin(conv * theta) * TMath::Cos(conv * phi),
-                        mom * TMath::Sin(conv * theta) * TMath::Sin(conv * phi),
-                        mom * TMath::Cos(conv * theta),
-                        track->Energy());
-
-    tracks.push_back(t);
-}
-
-TVector3 PrimVertReco::calc() const
-{
-    TMatrixD M[maxtracks];
-    TMatrixD b[maxtracks];
-
-    const size_t n = tracks.size();
-
-    for (uint k = 0; k < n; k++) {
-        double mom = tracks[k].second.P();
-        M[k].ResizeTo(3, 3);
-
-        double invpsq = 1. / (mom * mom);
-        double Px = tracks[k].second.Px();
-        double Py = tracks[k].second.Py();
-        double Pz = tracks[k].second.Pz();
-
-        M[k][0][0] = 1. - Px * Px * invpsq;
-        M[k][0][1] = -Px * Py * invpsq;
-        M[k][0][2] = -Px * Pz * invpsq;
-        M[k][1][0] = M[k][0][1];
-        M[k][1][1] = 1. - Py * Py * invpsq;
-        M[k][1][2] = -Py * Pz * invpsq;
-        M[k][2][0] = M[k][0][2];
-        M[k][2][1] = M[k][1][2];
-        M[k][2][2] = 1. - Pz * Pz * invpsq;
-        b[k].ResizeTo(3, 1);
-        b[k][0][0] = tracks[k].first.X();
-        b[k][1][0] = tracks[k].first.Y();
-        b[k][2][0] = tracks[k].first.Z();
-    }
-
-    TMatrixD MM(3, 3);
-    TMatrixD bb(3, 1);
-    for (uint k = 0; k < n; k++) {
-        MM += M[k];
-        bb += M[k] * b[k];
-    }
-
-    TMatrixD r(3, 1);
-    if (MM.Determinant() == 0) {
-        r[0][0] = -50;
-        r[1][0] = -50;
-        r[2][0] = -1000;
-    } else {
-        MM = MM.Invert();
-        r = MM * bb;
-    }
-
-    TVector3 ret;
-    ret.SetXYZ(r[0][0], r[1][0], r[2][0]);
-    return ret;
-}
-
-void PrimVertReco::clear()
-{
-    tracks.clear();
-}
-
-}  // namespace pvr
+} // namespace pvr

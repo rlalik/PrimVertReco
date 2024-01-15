@@ -1,83 +1,98 @@
-#include <TApplication.h>
-#include <TF2.h>
-#include <TFile.h>
-#include <TGraphAsymmErrors.h>
-#include <TROOT.h>
 #include <gtest/gtest.h>
+
 #include <pvr/pvr.hpp>
 
-#define PR(x) std::cout << "++DEBUG: " << #x << " = |" << x << "| (" << __FILE__ << ", " << __LINE__ << ")\n";
+#include <array>
+#include <vector>
 
-pvr::hades_track gen_track(float b_x, float b_y, float b_z, float v_px, float v_py, float v_pz, float v_e)
+pvr::spatial_track make_spatial_track(float b_x, float b_y, float b_z, float v_px, float v_py, float v_pz)
 {
-    TVector3 base(b_x, b_y, b_z);
-    TLorentzVector vec;
-    vec.SetPxPyPzE(v_px, v_py, v_pz, v_e);
-
-    pvr::hades_track ht(base, vec);
-
-    return ht;
+    return {{b_x, b_y, b_z}, {v_px, v_py, v_pz}};
 }
 
 static double accuracy = 0.00001;
 
-TEST(Basic, MyTest)
+TEST(Basic, GenPhys)
 {
-    pvr::PrimVertReco pvr;
+    std::vector<std::pair<std::vector<std::array<double, 6>>, std::array<double, 3>>> data = {
+        {{{0, 0, 0, 0, 0, 10}, {0, 0, 0, 0, 10, 0}}, {0, 0, 0}},
+        {{{0, 0, 0, 0, 0, 10}, {0, 0, 0, 10, 0, 0}}, {0, 0, 0}},
+        {{{0, 0, 0, 0, 0, 10}, {0, 0, 0, 10, 0, 0}}, {0, 0, 0}},
+        {{{0, 0, 0, 0, 0, 10}, {0, 0, 10, 10, 0, 0}}, {0, 0, 10}},
+        {{{0, 0, -15, 10, 0, 0}, {0, 0, 5, 0, -10, 0}}, {0, 0, -5}},
+        {{{0, 0, -15, 10, 0, 0}, {0, 0, 5, 0, -10, 0}, {0, 0, -5, -10, 0, 0}}, {0, 0, -5}}};
 
-    float fnum = 2.00001f;
+    int cnt = 0;
+    for (const auto& test_set : data)
+    {
+        pvr::pvr pvr;
+        for (const auto& inputs : test_set.first)
+        {
+            pvr.insert_track(make_spatial_track(inputs[0], inputs[1], inputs[2], inputs[3], inputs[4], inputs[5]));
+        }
 
-    EXPECT_NEAR(fnum, 2.0f, 0.0005);
+        auto vec_res = pvr.calculate();
 
-    std::string pattern_string("%%d pattern");
-    std::string test_string("test pattern");
-    std::string replace_string("test");
+        EXPECT_NEAR(test_set.second[0], vec_res.X(), 0.0005) << "in x for set " << cnt;
+        EXPECT_NEAR(test_set.second[1], vec_res.Y(), 0.0005) << "in y for set " << cnt;
+        EXPECT_NEAR(test_set.second[2], vec_res.Z(), 0.0005) << "in z for set " << cnt;
+        cnt++;
+    }
+}
 
-    TVector3 vec_res;
+TEST(Basic, Lorentz)
+{
+    std::vector<std::pair<std::vector<std::array<double, 6>>, std::array<double, 3>>> data = {
+        {{{0, 0, 0, 0, 0, 10}, {0, 0, 0, 0, 10, 0}}, {0, 0, 0}},
+        {{{0, 0, 0, 0, 0, 10}, {0, 0, 0, 10, 0, 0}}, {0, 0, 0}},
+        {{{0, 0, 0, 0, 0, 10}, {0, 0, 0, 10, 0, 0}}, {0, 0, 0}},
+        {{{0, 0, 0, 0, 0, 10}, {0, 0, 10, 10, 0, 0}}, {0, 0, 10}},
+        {{{0, 0, -15, 10, 0, 0}, {0, 0, 5, 0, -10, 0}}, {0, 0, -5}},
+        {{{0, 0, -15, 10, 0, 0}, {0, 0, 5, 0, -10, 0}, {0, 0, -5, -10, 0, 0}}, {0, 0, -5}}};
 
-    // test
-    pvr.clear();
-    pvr.insert_track(gen_track(0, 0, 0, 0, 0, 10, 10));
-    pvr.insert_track(gen_track(0, 0, 0, 0, 10, 0, 10));
-    vec_res = pvr.calc();
-    EXPECT_NEAR(0, vec_res.X(), 0.0005);
-    EXPECT_NEAR(0, vec_res.Y(), 0.0005);
-    EXPECT_NEAR(0, vec_res.Z(), 0.0005);
+    int cnt = 0;
+    for (const auto& test_set : data)
+    {
+        pvr::pvr pvr;
+        for (const auto& inputs : test_set.first)
+        {
+            pvr.insert_track(TVector3(inputs[0], inputs[1], inputs[2]),
+                             TLorentzVector(inputs[3], inputs[4], inputs[5], 10));
+        }
 
-    // test
-    pvr.clear();
-    pvr.insert_track(gen_track(0, 0, 0, 0, 0, 10, 10));
-    pvr.insert_track(gen_track(0, 0, 0, 10, 0, 0, 10));
-    vec_res = pvr.calc();
-    EXPECT_NEAR(0, vec_res.X(), 0.0005);
-    EXPECT_NEAR(0, vec_res.Y(), 0.0005);
-    EXPECT_NEAR(0, vec_res.Z(), 0.0005);
+        auto vec_res = pvr.calculate();
 
-    // test
-    pvr.clear();
-    pvr.insert_track(gen_track(0, 0, 0, 0, 0, 10, 10));
-    pvr.insert_track(gen_track(0, 0, 10, 10, 0, 0, 10));
-    vec_res = pvr.calc();
-    EXPECT_NEAR(0, vec_res.X(), 0.0005);
-    EXPECT_NEAR(0, vec_res.Y(), 0.0005);
-    EXPECT_NEAR(10, vec_res.Z(), 0.0005);
+        EXPECT_NEAR(test_set.second[0], vec_res.X(), 0.0005) << "in x for set " << cnt;
+        EXPECT_NEAR(test_set.second[1], vec_res.Y(), 0.0005) << "in y for set " << cnt;
+        EXPECT_NEAR(test_set.second[2], vec_res.Z(), 0.0005) << "in z for set " << cnt;
+        cnt++;
+    }
+}
 
-    // test
-    pvr.clear();
-    pvr.insert_track(gen_track(0, 0, -15, 10, 0, 0, 10));
-    pvr.insert_track(gen_track(0, 0, 5, 0, -10, 0, 10));
-    vec_res = pvr.calc();
-    EXPECT_NEAR(0, vec_res.X(), 0.0005);
-    EXPECT_NEAR(0, vec_res.Y(), 0.0005);
-    EXPECT_NEAR(-5, vec_res.Z(), 0.0005);
+TEST(Basic, OnlyVectors)
+{
+    std::vector<std::pair<std::vector<std::array<double, 6>>, std::array<double, 3>>> data = {
+        {{{0, 0, 0, 0, 0, 10}, {0, 0, 0, 0, 10, 0}}, {0, 0, 0}},
+        {{{0, 0, 0, 0, 0, 10}, {0, 0, 0, 10, 0, 0}}, {0, 0, 0}},
+        {{{0, 0, 0, 0, 0, 10}, {0, 0, 0, 10, 0, 0}}, {0, 0, 0}},
+        {{{0, 0, 0, 0, 0, 10}, {0, 0, 10, 10, 0, 0}}, {0, 0, 10}},
+        {{{0, 0, -15, 10, 0, 0}, {0, 0, 5, 0, -10, 0}}, {0, 0, -5}},
+        {{{0, 0, -15, 10, 0, 0}, {0, 0, 5, 0, -10, 0}, {0, 0, -5, -10, 0, 0}}, {0, 0, -5}}};
 
-    // test
-    pvr.clear();
-    pvr.insert_track(gen_track(0, 0, -15, 10, 0, 0, 10));
-    pvr.insert_track(gen_track(0, 0, 5, 0, -10, 0, 10));
-    pvr.insert_track(gen_track(0, 0, -5, -10, 0, 0, 10));
-    vec_res = pvr.calc();
-    EXPECT_NEAR(0, vec_res.X(), 0.0005);
-    EXPECT_NEAR(0, vec_res.Y(), 0.0005);
-    EXPECT_NEAR(-5, vec_res.Z(), 0.0005);
+    int cnt = 0;
+    for (const auto& test_set : data)
+    {
+        pvr::pvr pvr;
+        for (const auto& inputs : test_set.first)
+        {
+            pvr.insert_track(TVector3(inputs[0], inputs[1], inputs[2]), TVector3(inputs[3], inputs[4], inputs[5]));
+        }
+
+        auto vec_res = pvr.calculate();
+
+        EXPECT_NEAR(test_set.second[0], vec_res.X(), 0.0005) << "in x for set " << cnt;
+        EXPECT_NEAR(test_set.second[1], vec_res.Y(), 0.0005) << "in y for set " << cnt;
+        EXPECT_NEAR(test_set.second[2], vec_res.Z(), 0.0005) << "in z for set " << cnt;
+        cnt++;
+    }
 }

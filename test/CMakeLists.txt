@@ -22,7 +22,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(hades-tools)
 list(APPEND CMAKE_MODULE_PATH ${hades-tools_SOURCE_DIR}/cmake)
 
-find_package(HYDRA)
 find_package(ROOT)
 
 find_package(GTest)
@@ -38,7 +37,7 @@ endif()
 # ---- Tests ----
 
 add_executable(pvr_test source/test_basic.cpp)
-target_link_libraries(pvr_test PRIVATE ${GTEST_TRG} pvr::pvr HYDRA::all ROOT::Physics)
+target_link_libraries(pvr_test PRIVATE ${GTEST_TRG} pvr::pvr ROOT::Physics)
 target_compile_features(pvr_test PRIVATE cxx_std_17)
 
 add_test(NAME pvr_test COMMAND pvr_test)

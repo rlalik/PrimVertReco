@@ -4,7 +4,7 @@ include(cmake/prelude.cmake)
 
 project(
     pvr
-    VERSION 0.1.0
+    VERSION 0.2.0
     DESCRIPTION "Primary Vertex Reconstruction (pvr) for HADES"
     HOMEPAGE_URL "https://github.com/rlalik/PrimVertReco"
     LANGUAGES CXX
