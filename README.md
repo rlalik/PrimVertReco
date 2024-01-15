@@ -13,6 +13,7 @@ https://www.das.ktas.ph.tum.de/DasDocs/Public/Bachelor_Theses/MatthiasZipper_Bac
 # Usage
 ===========================================================
 
+```c++
 // include header
 #include <PrimVertReco.h>
 
@@ -31,7 +32,7 @@ Tvector3 prim_vector = pvt.calc();
 
 // cleanup the object to prepare for new tracks:
 pvr.cleanup();
-
+```
 
 3. Installation
 ===========================================================

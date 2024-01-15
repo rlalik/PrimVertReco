@@ -1,7 +1,7 @@
 #include <pvr/pvr.hpp>
 
-#include <hparticlecand.h>
 #include <hforwardcand.h>
+#include <hparticlecand.h>
 
 auto make_spatial_track_hades(HVirtualCand* track) -> pvr::spatial_track
 {
@@ -38,4 +38,3 @@ auto main() -> int
 
     return 0;
 }
-
