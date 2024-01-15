@@ -1,7 +1,6 @@
-1. Info
-===========================================================
+# What is pvr
 
-Primary Vertex Reconstruction for HADES based on the procedure
+Primary Vertex Reconstruction (pvr) for HADES based on the procedure
 developped by Matthias Zipper:
 
 M. Zipper, Technische Universität München (2015)
@@ -12,7 +11,7 @@ See Appendix A of:
 https://www.das.ktas.ph.tum.de/DasDocs/Public/Bachelor_Theses/MatthiasZipper_BachelorThesis_v1.pdf
 
 
-2. Usage
+# Usage
 ===========================================================
 
 // include header
@@ -55,3 +54,19 @@ sudo make install
 cmake .. -DCMAKE_INSTALL_PREFIX=your_custom_location
 make
 make install
+
+# Building and installing
+
+See the [BUILDING](BUILDING.md) document.
+
+# Contributing
+
+See the [CONTRIBUTING](CONTRIBUTING.md) document.
+
+# Licensing
+
+<!--
+Please go to https://choosealicense.com/licenses/ and choose a license that
+fits your needs. The recommended license for a project of this type is the
+Boost Software License 1.0.
+-->
