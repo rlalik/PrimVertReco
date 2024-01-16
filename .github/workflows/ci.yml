@@ -9,6 +9,10 @@ on:
     branches:
     - master
 
+env:
+  ROOTSYS: /cern/root
+  HADDIR: /hades/hydra2
+
 jobs:
   lint:
     runs-on: ubuntu-22.04
@@ -50,10 +54,10 @@ jobs:
 
     - name: Install LCov
       run: sudo apt-get update -q
-        && sudo apt-get install lcov -q -y
+        && sudo apt-get install lcov libgtest-dev -q -y
 
     - name: Configure
-      run: cmake --preset=ci-coverage
+      run: cmake --preset=ci-coverage "-DROOT_DIR=$ROOTSYS/cmake"
 
     - name: Build
       run: cmake --build build/coverage -j 2
@@ -85,8 +89,12 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Install LCov
+      run: sudo apt-get update -q
+        && sudo apt-get install clang-14 -q -y
+
     - name: Configure
-      run: cmake --preset=ci-sanitize
+      run: cmake --preset=ci-sanitize -DROOT_DIR=$ROOTSYS/cmake
 
     - name: Build
       run: cmake --build build/sanitize -j 2
@@ -123,7 +131,7 @@ jobs:
     - name: Install static analyzers
       if: matrix.os == 'ubuntu-22.04'
       run: >-
-        sudo apt-get install clang-tidy-14 cppcheck -y -q
+        sudo apt-get install clang-tidy-14 cppcheck libgtest-dev -y -q
 
         sudo update-alternatives --install
         /usr/bin/clang-tidy clang-tidy
@@ -137,7 +145,7 @@ jobs:
 
     - name: Configure
       shell: pwsh
-      run: cmake "--preset=ci-$("${{ matrix.os }}".split("-")[0])"
+      run: cmake "--preset=ci-$("${{ matrix.os }}".split("-")[0])" "-DROOT_DIR=$ROOTSYS/cmake"
 
     - name: Build
       run: cmake --build build --config Release -j 2
@@ -173,8 +181,7 @@ jobs:
     # simply delete this job similarly to the coverage one.
     if: github.ref == 'refs/heads/master'
       && github.event_name == 'push'
-      && github.repository_owner == '<name>'
-      && false
+      && github.repository_owner == 'rlalik'
 
     steps:
     - uses: actions/checkout@v3
@@ -190,7 +197,7 @@ jobs:
         && sudo apt-get install doxygen -q -y
 
     - name: Build docs
-      run: cmake "-DPROJECT_SOURCE_DIR=$PWD" "-DPROJECT_BINARY_DIR=$PWD/build"
+      run: cmake "-DPROJECT_SOURCE_DIR=$PWD" "-DPROJECT_BINARY_DIR=$PWD/build" "-DROOT_DIR=$ROOTSYS/cmake"
         -P cmake/docs-ci.cmake
 
     - name: Deploy docs
