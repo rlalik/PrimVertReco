@@ -33,13 +33,17 @@ jobs:
     needs: [lint]
 
     runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/rlalik/hydra2:latest
+      credentials:
+        username: rlalik
+        password: ${{ secrets.DOCKER_CONTAINER_REGISTRY_TOKEN }}
 
     # To enable coverage, delete the last line from the conditional below and
     # edit the "<name>" placeholder to your GitHub name.
     # If you do not wish to use codecov, then simply delete this job from the
     # workflow.
-    if: github.repository_owner == '<name>'
-      && false
+    if: github.repository_owner == 'rlalik'
 
     steps:
     - uses: actions/checkout@v3
@@ -70,6 +74,11 @@ jobs:
     needs: [lint]
 
     runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/rlalik/hydra2:latest
+      credentials:
+        username: rlalik
+        password: ${{ secrets.DOCKER_CONTAINER_REGISTRY_TOKEN }}
 
     env: { CXX: clang++-14 }
 
@@ -98,9 +107,15 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-12, ubuntu-22.04, windows-2022]
+        # os: [macos-12, ubuntu-22.04, windows-2022]
+        os: [ubuntu-22.04]
 
     runs-on: ${{ matrix.os }}
+    container:
+      image: ghcr.io/rlalik/hydra2:latest
+      credentials:
+        username: rlalik
+        password: ${{ secrets.DOCKER_CONTAINER_REGISTRY_TOKEN }}
 
     steps:
     - uses: actions/checkout@v3
@@ -139,6 +154,11 @@ jobs:
     needs: [sanitize, test]
 
     runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/rlalik/hydra2:latest
+      credentials:
+        username: rlalik
+        password: ${{ secrets.DOCKER_CONTAINER_REGISTRY_TOKEN }}
 
     # To enable, first you have to create an orphaned gh-pages branch:
     #
