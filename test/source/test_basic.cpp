@@ -33,9 +33,9 @@ TEST(Basic, GenPhys)
 
         auto vec_res = pvr.calculate();
 
-        EXPECT_NEAR(test_set.second[0], vec_res.X(), 0.0005) << "in x for set " << cnt;
-        EXPECT_NEAR(test_set.second[1], vec_res.Y(), 0.0005) << "in y for set " << cnt;
-        EXPECT_NEAR(test_set.second[2], vec_res.Z(), 0.0005) << "in z for set " << cnt;
+        EXPECT_NEAR(test_set.second[0], vec_res.X(), accuracy) << "in x for set " << cnt;
+        EXPECT_NEAR(test_set.second[1], vec_res.Y(), accuracy) << "in y for set " << cnt;
+        EXPECT_NEAR(test_set.second[2], vec_res.Z(), accuracy) << "in z for set " << cnt;
         cnt++;
     }
 }
@@ -62,9 +62,9 @@ TEST(Basic, Lorentz)
 
         auto vec_res = pvr.calculate();
 
-        EXPECT_NEAR(test_set.second[0], vec_res.X(), 0.0005) << "in x for set " << cnt;
-        EXPECT_NEAR(test_set.second[1], vec_res.Y(), 0.0005) << "in y for set " << cnt;
-        EXPECT_NEAR(test_set.second[2], vec_res.Z(), 0.0005) << "in z for set " << cnt;
+        EXPECT_NEAR(test_set.second[0], vec_res.X(), accuracy) << "in x for set " << cnt;
+        EXPECT_NEAR(test_set.second[1], vec_res.Y(), accuracy) << "in y for set " << cnt;
+        EXPECT_NEAR(test_set.second[2], vec_res.Z(), accuracy) << "in z for set " << cnt;
         cnt++;
     }
 }
@@ -90,9 +90,9 @@ TEST(Basic, OnlyVectors)
 
         auto vec_res = pvr.calculate();
 
-        EXPECT_NEAR(test_set.second[0], vec_res.X(), 0.0005) << "in x for set " << cnt;
-        EXPECT_NEAR(test_set.second[1], vec_res.Y(), 0.0005) << "in y for set " << cnt;
-        EXPECT_NEAR(test_set.second[2], vec_res.Z(), 0.0005) << "in z for set " << cnt;
+        EXPECT_NEAR(test_set.second[0], vec_res.X(), accuracy) << "in x for set " << cnt;
+        EXPECT_NEAR(test_set.second[1], vec_res.Y(), accuracy) << "in y for set " << cnt;
+        EXPECT_NEAR(test_set.second[2], vec_res.Z(), accuracy) << "in z for set " << cnt;
         cnt++;
     }
 }

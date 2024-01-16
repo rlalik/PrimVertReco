@@ -57,7 +57,7 @@ jobs:
         && sudo apt-get install lcov libgtest-dev -q -y
 
     - name: Configure
-      run: cmake --preset=ci-coverage "-DROOT_DIR=$ROOTSYS/cmake"
+      run: cmake --preset=ci-coverage -DROOT_DIR=$ROOTSYS/cmake
 
     - name: Build
       run: cmake --build build/coverage -j 2
@@ -144,8 +144,7 @@ jobs:
         Add-Content "$env:GITHUB_ENV" 'EnforceProcessCountAcrossBuilds=true'
 
     - name: Configure
-      shell: pwsh
-      run: cmake "--preset=ci-$("${{ matrix.os }}".split("-")[0])" "-DROOT_DIR=$ROOTSYS/cmake"
+      run: cmake --preset=ci-$(echo ${{ matrix.os }} | cut -f1 -d-) -DROOT_DIR=$ROOTSYS/cmake
 
     - name: Build
       run: cmake --build build --config Release -j 2
@@ -162,11 +161,6 @@ jobs:
     needs: [sanitize, test]
 
     runs-on: ubuntu-22.04
-    container:
-      image: ghcr.io/rlalik/hydra2:latest
-      credentials:
-        username: rlalik
-        password: ${{ secrets.DOCKER_CONTAINER_REGISTRY_TOKEN }}
 
     # To enable, first you have to create an orphaned gh-pages branch:
     #
@@ -186,7 +180,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v5
       with: { python-version: "3.8" }
 
     - name: Install m.css dependencies
@@ -197,7 +191,7 @@ jobs:
         && sudo apt-get install doxygen -q -y
 
     - name: Build docs
-      run: cmake "-DPROJECT_SOURCE_DIR=$PWD" "-DPROJECT_BINARY_DIR=$PWD/build" "-DROOT_DIR=$ROOTSYS/cmake"
+      run: cmake -DPROJECT_SOURCE_DIR=$PWD -DPROJECT_BINARY_DIR=$PWD/build -DROOT_DIR=$ROOTSYS/cmake
         -P cmake/docs-ci.cmake
 
     - name: Deploy docs

@@ -15,6 +15,8 @@ include(cmake/variables.cmake)
 
 # ---- Declare library ----
 
+find_package(ROOT)
+
 add_library(pvr_pvr INTERFACE)
 add_library(pvr::pvr ALIAS pvr_pvr)
 
@@ -30,6 +32,8 @@ target_include_directories(
 )
 
 target_compile_features(pvr_pvr INTERFACE cxx_std_17)
+
+target_link_libraries(pvr_pvr INTERFACE ROOT::GenVector ROOT::MathCore ROOT::Matrix ROOT::Physics)
 
 # ---- Install rules ----
 
